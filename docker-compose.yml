@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-habit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-habit}
+      POSTGRES_DB: ${POSTGRES_DB:-habit}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-habit} -d ${POSTGRES_DB:-habit}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-habit}:${POSTGRES_PASSWORD:-habit}@db:5432/${POSTGRES_DB:-habit}
+      JWT_SECRET: ${JWT_SECRET:-insecure_dev_only_set_JWT_SECRET_in_production_32char_min}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

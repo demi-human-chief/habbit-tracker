@@ -1,0 +1,62 @@
+# Полный стек на одной ВМ: PostgreSQL, API, собранный фронт, Caddy :80/443
+#   docker compose -f docker-compose.prod.yml up -d --build
+# Перед первым запуском: cp .env.example .env, задать POSTGRES_*, JWT_SECRET, при необходимости CORS_ORIGINS
+#
+# БД не публикуем наружу (только внутренняя сеть Docker).
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-habit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-habit}
+      POSTGRES_DB: ${POSTGRES_DB:-habit}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-habit} -d ${POSTGRES_DB:-habit}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-habit}:${POSTGRES_PASSWORD:-habit}@db:5432/${POSTGRES_DB:-habit}
+      JWT_SECRET: ${JWT_SECRET:-insecure_dev_only_set_JWT_SECRET_in_production_32char_min}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://127.0.0.1}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    expose:
+      - "8000"
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ""
+    restart: unless-stopped
+    expose:
+      - "80"
+
+  caddy:
+    image: caddy:2.8-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

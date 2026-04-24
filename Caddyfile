@@ -1,0 +1,23 @@
+# Прод-прокси: API на FastAPI, остальное — статик SPA (nginx:web).
+# Запуск: docker compose -f docker-compose.prod.yml up -d
+#
+# Позже, когда будет домен с DNS на эту ВМ, замените первый блок на:
+#   your-domain.com {
+#     ... те же handle ...
+#   }
+# Caddy выдаст Let's Encrypt. До этого достаточно :80 (или смотрите Caddyfile.domain.example).
+
+:80 {
+    encode gzip
+
+    @api {
+        path /api* /docs* /redoc* /openapi.json /health*
+    }
+    handle @api {
+        reverse_proxy api:8000
+    }
+
+    handle {
+        reverse_proxy web:80
+    }
+}
