@@ -5,6 +5,7 @@ import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { AppPage } from './pages/AppPage'
+import { AICoachPage } from './pages/AICoachPage'
 
 export default function App() {
   return (
@@ -28,6 +29,14 @@ export default function App() {
             element={(
               <RequireAuth>
                 <AppPage />
+              </RequireAuth>
+            )}
+          />
+          <Route
+            path="/app/ai"
+            element={(
+              <RequireAuth>
+                <AICoachPage />
               </RequireAuth>
             )}
           />

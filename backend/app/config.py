@@ -21,6 +21,8 @@ class Settings(BaseSettings):
 
     # CORS: через запятую, без пробелов (или с пробелами — обрежем)
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "qwen2.5:7b"
 
     @field_validator("jwt_secret")
     @classmethod

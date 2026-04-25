@@ -23,9 +23,19 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-habit}:${POSTGRES_PASSWORD:-habit}@db:5432/${POSTGRES_DB:-habit}
       JWT_SECRET: ${JWT_SECRET:-insecure_dev_only_set_JWT_SECRET_in_production_32char_min}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:7b}
     depends_on:
       db:
         condition: service_healthy
 
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
 volumes:
   pgdata:
+  ollama_data:

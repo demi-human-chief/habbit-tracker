@@ -1,5 +1,5 @@
 import uuid
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
@@ -12,6 +12,7 @@ from app.deps import get_current_user
 from app.models.habit import Habit
 from app.models.habit_log import HabitLog
 from app.models.user import User
+from app.schemas.dashboard import ToggleTodayOut
 from app.schemas.habit import HabitCreate, HabitPublic, HabitUpdate
 from app.schemas.habit_log import HabitLogCreate, HabitLogPublic
 
@@ -110,6 +111,39 @@ def delete_habit(
     db.delete(h)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{habit_id}/toggle-today", response_model=ToggleTodayOut)
+def toggle_habit_today(
+    habit_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ToggleTodayOut:
+    _get_owned_habit(db, user, habit_id)
+    today = datetime.now(timezone.utc).date()
+    log = db.scalar(
+        select(HabitLog).where(
+            HabitLog.habit_id == habit_id,
+            HabitLog.user_id == user.id,
+            HabitLog.logged_for_date == today,
+        )
+    )
+    if log is None:
+        new_log = HabitLog(
+            habit_id=habit_id,
+            user_id=user.id,
+            logged_for_date=today,
+        )
+        db.add(new_log)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            return ToggleTodayOut(habit_id=habit_id, completed_today=True)
+        return ToggleTodayOut(habit_id=habit_id, completed_today=True)
+    db.delete(log)
+    db.commit()
+    return ToggleTodayOut(habit_id=habit_id, completed_today=False)
 
 
 # --- logs ---

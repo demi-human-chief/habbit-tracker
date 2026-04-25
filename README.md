@@ -6,18 +6,19 @@ Monorepo: `frontend` (Vite + React + TypeScript), `backend` (FastAPI), `docker-c
 
 ### Фронт (Vite, React Router, лендинг в духе Apple Fitness)
 
-`VITE_API_URL` указывает на бэкенд, по умолчанию `http://127.0.0.1:8000` — скопируйте [`frontend/.env.example`](frontend/.env.example) в `frontend/.env` при необходимости.
+**Переменные фронта:** `VITE_API_URL` — базовый URL API (без завершающего `/`); в dev по умолчанию `http://127.0.0.1:8000`, в прод-сборке без значения запросы идут на тот же origin. Скопируйте [`frontend/.env.example`](frontend/.env.example) в `frontend/.env` при необходимости.
 
 ```bash
 cd frontend && npm install && npm run dev
 ```
 
-- Главная: лендинг, `/login`, `/register`, защищённый `/app` (список привычек из API, выход).
+- Главная: лендинг, `/login`, `/register`, защищённый `/app` — **дашборд «Today»** загружает данные с API (`GET /api/v1/dashboard/today`), создание и отметка привычек идут через `POST /api/v1/habits/` и `POST /api/v1/habits/{id}/toggle-today` (JWT из `localStorage`, см. [`frontend/src/lib/api.ts`](frontend/src/lib/api.ts)).
+- Страница `/app/ai`: локальный **AI Coach** (Qwen через Ollama) через backend endpoint `POST /api/v1/ai/coach`.
 - CORS бэка должен разрешать `http://localhost:5173` (уже в `docker-compose` / `.env`).
 
 ### API (без Docker)
 
-Нужен запущенный PostgreSQL и `DATABASE_URL` (см. корневой `.env.example`; для `backend` можно скопировать в `backend/.env`).
+Нужен запущенный PostgreSQL и **`DATABASE_URL`**, плюс **`JWT_SECRET`** (≥32 символа), **`CORS_ORIGINS`** (через запятую, например `http://localhost:5173`), **`OLLAMA_BASE_URL`** (например `http://localhost:11434`), **`OLLAMA_MODEL`** (например `qwen2.5:7b`) — см. корневой [`.env.example`](.env.example); для `backend` можно скопировать в `backend/.env`.
 
 ```bash
 cd backend && python -m venv .venv && source .venv/bin/activate
@@ -35,6 +36,13 @@ docker compose up --build
 ```
 
 При старте контейнера `api` автоматически выполняется `alembic upgrade head`.
+
+Для локального AI Coach сначала поднимите Ollama и скачайте модель:
+
+```bash
+docker compose up -d ollama
+docker exec -it <ollama_container_name> ollama pull qwen2.5:7b
+```
 
 - API: `http://localhost:8000/health`, проверка БД: `http://localhost:8000/health/db`
 - OpenAPI: `http://localhost:8000/docs`
@@ -55,7 +63,11 @@ alembic upgrade head
 
 ## Порядок работ
 
-**Опционально дальше:** формы **создания/редактирования** привычек и **отметок** в SPA.
+**Опционально дальше:** расширенные формы редактирования привычек, календарь отметок, реальный streak на бэкенде.
+
+**Дашборд (Today):** `GET /api/v1/dashboard/today` — привычки пользователя с `completed_today`, агрегаты `total_count`, `completed_count`, `completion_percent`, поля колец `ring_habits`, `ring_consistency`, `ring_focus`, `streak` (пока заглушка с бэка). `POST /api/v1/habits/{id}/toggle-today` — переключить отметку за сегодня (UTC-дата на сервере).
+
+**AI Coach (локальный):** `POST /api/v1/ai/coach` — backend собирает контекст привычек и логов за последние 14 дней, затем отправляет запрос в Ollama (`OLLAMA_BASE_URL`, `OLLAMA_MODEL`) и возвращает короткий персональный ответ.
 
 **Готово в том числе:** прод-стек [docker-compose.prod.yml](docker-compose.prod.yml) (PostgreSQL, API, Nginx+SPA, [Caddyfile](Caddyfile) — `:80`, прокси `/api*`, `/docs*`, `…` → API, остальное → фронт). Пример [Caddyfile.domain.example](Caddyfile.domain.example) — домен и Let’s Encrypt.
 
@@ -77,3 +89,6 @@ alembic upgrade head
 - `GET /api/v1/habits/{id}/logs?from=…&to=…` — отметки по дням
 - `POST /api/v1/habits/{id}/logs` — тело: `logged_for_date`, при необходимости `note`, `metadata` (дубликат дня → 409)
 - `DELETE /api/v1/habits/{id}/logs?logged_for_date=YYYY-MM-DD`
+- `GET /api/v1/dashboard/today` — сводка на сегодня для дашборда
+- `POST /api/v1/habits/{id}/toggle-today` — создать/удалить отметку за сегодня
+- `POST /api/v1/ai/coach` — локальный AI Coach через Ollama
