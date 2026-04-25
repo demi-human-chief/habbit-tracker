@@ -4,6 +4,7 @@ const TABS: { id: BottomTab; label: string; icon: string }[] = [
   { id: 'today', label: 'Today', icon: '◎' },
   { id: 'stats', label: 'Stats', icon: '▣' },
   { id: 'coach', label: 'AI Coach', icon: '✦' },
+  { id: 'admin', label: 'Admin', icon: '⌘' },
   { id: 'profile', label: 'Profile', icon: '⍟' },
 ]
 
@@ -11,6 +12,7 @@ type Props = {
   active: BottomTab
   onChange: (tab: BottomTab) => void
   variant: 'bar' | 'rail'
+  showAdmin?: boolean
 }
 
 function TabButton({
@@ -57,14 +59,15 @@ function TabButton({
   )
 }
 
-export function BottomNav({ active, onChange, variant }: Props) {
+export function BottomNav({ active, onChange, variant, showAdmin = false }: Props) {
+  const visibleTabs = showAdmin ? TABS : TABS.filter((t) => t.id !== 'admin')
   if (variant === 'rail') {
     return (
       <nav
         aria-label="Main"
         className="sticky top-4 z-40 hidden w-16 shrink-0 flex-col items-stretch gap-1 self-start rounded-3xl border border-white/10 bg-zinc-950/70 p-2 shadow-2xl shadow-black/40 backdrop-blur-xl lg:flex xl:w-[4.5rem]"
       >
-        {TABS.map((t) => (
+        {visibleTabs.map((t) => (
           <TabButton
             key={t.id}
             t={t}
@@ -84,7 +87,7 @@ export function BottomNav({ active, onChange, variant }: Props) {
       className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 lg:hidden"
     >
       <div className="mx-auto flex max-w-[430px] items-stretch justify-around gap-1 rounded-3xl border border-white/10 bg-zinc-950/85 px-1 py-1.5 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:max-w-2xl md:max-w-3xl">
-        {TABS.map((t) => (
+        {visibleTabs.map((t) => (
           <TabButton
             key={t.id}
             t={t}

@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:7b"
+    telegram_bot_token: str = ""
+    public_app_url: str = "http://localhost:8000"
+    telegram_reminder_hour: int = 9
+    telegram_reminder_minute: int = 0
 
     @field_validator("jwt_secret")
     @classmethod

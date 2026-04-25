@@ -6,6 +6,8 @@ import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { AppPage } from './pages/AppPage'
 import { AICoachPage } from './pages/AICoachPage'
+import { StatsPage } from './pages/StatsPage'
+import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage'
 
 export default function App() {
   return (
@@ -37,6 +39,22 @@ export default function App() {
             element={(
               <RequireAuth>
                 <AICoachPage />
+              </RequireAuth>
+            )}
+          />
+          <Route
+            path="/app/stats"
+            element={(
+              <RequireAuth>
+                <StatsPage />
+              </RequireAuth>
+            )}
+          />
+          <Route
+            path="/app/admin/analytics"
+            element={(
+              <RequireAuth>
+                <AdminAnalyticsPage />
               </RequireAuth>
             )}
           />

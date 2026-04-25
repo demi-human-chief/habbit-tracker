@@ -9,6 +9,7 @@ from app.models.user import User
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
 from app.schemas.user import UserPublic
 from app.security import create_access_token, hash_password, verify_password
+from app.services.analytics_service import track_event
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -39,6 +40,10 @@ def register(
             detail="This email is already registered",
         ) from None
     db.refresh(user)
+    try:
+        track_event(db, "user_registered", user_id=user.id, source="web")
+    except Exception:
+        pass
     return user
 
 
@@ -50,6 +55,10 @@ def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
+    try:
+        track_event(db, "user_logged_in", user_id=user.id, source="web")
+    except Exception:
+        pass
     return TokenResponse(access_token=create_access_token(user.id))
 
 

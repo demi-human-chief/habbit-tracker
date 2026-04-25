@@ -17,6 +17,7 @@ from app.services.ollama_service import (
     OllamaServiceError,
     OllamaUnavailableError,
 )
+from app.services.analytics_service import track_event
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -37,6 +38,16 @@ def coach_reply(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> CoachResponse:
+    try:
+        track_event(
+            db,
+            "ai_message_sent",
+            user_id=user.id,
+            source="ai",
+            meta={"message_length": len(body.message)},
+        )
+    except Exception:
+        pass
     today = datetime.now(timezone.utc).date()
     since = today - timedelta(days=13)
 

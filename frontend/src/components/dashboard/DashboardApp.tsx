@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../lib/api'
 import { useAuth } from '../../lib/auth-context'
+import { generateTelegramLinkCode, type TelegramLinkCodeResponse } from '../../lib/telegram-api'
 import {
   createHabit,
   getTodayDashboard,
@@ -66,6 +67,9 @@ export function DashboardApp() {
   const [refreshing, setRefreshing] = useState(false)
   const [adding, setAdding] = useState(false)
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [tgLink, setTgLink] = useState<TelegramLinkCodeResponse | null>(null)
+  const [tgBusy, setTgBusy] = useState(false)
+  const [tgError, setTgError] = useState<string | null>(null)
 
   const loadDashboard = useCallback(async (opts?: { silent?: boolean }) => {
     const silent = opts?.silent === true
@@ -159,9 +163,34 @@ export function DashboardApp() {
   const showTodaySkeleton = loading && !dash
   const showTodayError = Boolean(error) && !dash && !loading
   const emptyHabits = dash && dash.total_count === 0
+  const canSeeAdmin = Boolean(user?.is_admin)
+  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined
+  const botUrl = botUsername?.trim() ? `https://t.me/${botUsername.trim()}` : null
+
+  const onGenerateTelegramCode = async () => {
+    setTgBusy(true)
+    setTgError(null)
+    try {
+      const data = await generateTelegramLinkCode()
+      setTgLink(data)
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : 'Failed to generate Telegram code'
+      setTgError(msg)
+    } finally {
+      setTgBusy(false)
+    }
+  }
   const onTabChange = (nextTab: BottomTab) => {
     if (nextTab === 'coach') {
       navigate('/app/ai')
+      return
+    }
+    if (nextTab === 'stats') {
+      navigate('/app/stats')
+      return
+    }
+    if (nextTab === 'admin' && canSeeAdmin) {
+      navigate('/app/admin/analytics')
       return
     }
     setTab(nextTab)
@@ -176,6 +205,7 @@ export function DashboardApp() {
           active={tab}
           onChange={onTabChange}
           variant="rail"
+          showAdmin={canSeeAdmin}
         />
 
         <div className="flex min-w-0 flex-1 flex-col pb-28 sm:pb-24 lg:min-h-0 lg:pb-8">
@@ -319,7 +349,51 @@ export function DashboardApp() {
             <div className="flex min-h-[45svh] flex-col items-center px-2 pb-28 pt-2 text-center sm:pb-24 lg:pb-8">
               <h1 className="m-0 text-xl font-semibold text-zinc-100">Profile</h1>
               <p className="mt-2 text-sm text-zinc-500">{user?.email}</p>
-              <div className="mt-6 flex w-full max-w-[280px] flex-col gap-3">
+              <div className="mt-6 flex w-full max-w-[420px] flex-col gap-3">
+                <section className="rounded-[22px] border border-white/10 bg-zinc-900/70 p-4 text-left shadow-lg shadow-black/30 backdrop-blur-xl">
+                  <p className="m-0 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                    Telegram Integration
+                  </p>
+                  <p className="mt-2 text-sm text-zinc-300">
+                    {user?.telegram_id ? 'Connected ✅' : 'Not connected'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void onGenerateTelegramCode()}
+                    disabled={tgBusy}
+                    className="mt-3 w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm font-semibold text-zinc-100 transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    Generate Telegram link code
+                  </button>
+                  {tgError ? (
+                    <p className="mt-2 text-xs text-rose-300">{tgError}</p>
+                  ) : null}
+                  {tgLink ? (
+                    <div className="mt-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-3">
+                      <p className="m-0 text-xs uppercase tracking-[0.12em] text-emerald-300">
+                        Send this code to the bot
+                      </p>
+                      <p className="m-0 mt-1 text-xl font-bold tracking-[0.2em] text-emerald-200">
+                        {tgLink.code}
+                      </p>
+                    </div>
+                  ) : null}
+                  <ol className="mb-0 mt-3 list-decimal space-y-1 pl-5 text-xs text-zinc-400">
+                    <li>Open Telegram bot</li>
+                    <li>Press /start</li>
+                    <li>Send the code</li>
+                  </ol>
+                  {botUrl ? (
+                    <a
+                      href={botUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-white/10 bg-white/[0.08] px-3 py-2 text-sm font-semibold text-zinc-100 no-underline transition hover:bg-white/[0.12]"
+                    >
+                      Open bot
+                    </a>
+                  ) : null}
+                </section>
                 <Link
                   to="/"
                   className="block rounded-2xl border border-white/10 bg-zinc-900/70 px-4 py-3 text-center text-sm font-medium text-zinc-100 no-underline transition hover:-translate-y-0.5 hover:bg-white/10"
@@ -343,6 +417,7 @@ export function DashboardApp() {
         active={tab}
         onChange={onTabChange}
         variant="bar"
+        showAdmin={canSeeAdmin}
       />
     </div>
   )

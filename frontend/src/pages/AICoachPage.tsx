@@ -4,6 +4,7 @@ import { BottomNav } from '../components/dashboard/BottomNav'
 import type { BottomTab } from '../components/dashboard/types'
 import { ApiError } from '../lib/api'
 import { sendCoachMessage } from '../lib/coach-api'
+import { useAuth } from '../lib/auth-context'
 
 type ChatMsg = {
   role: 'user' | 'assistant'
@@ -12,6 +13,8 @@ type ChatMsg = {
 
 export function AICoachPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const canSeeAdmin = Boolean(user?.is_admin)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -26,6 +29,8 @@ export function AICoachPage() {
   const onTab = (tab: BottomTab) => {
     if (tab === 'today') navigate('/app')
     else if (tab === 'coach') navigate('/app/ai')
+    else if (tab === 'stats') navigate('/app/stats')
+    else if (tab === 'admin' && canSeeAdmin) navigate('/app/admin/analytics')
     else navigate('/app')
   }
 
@@ -54,6 +59,7 @@ export function AICoachPage() {
           active="coach"
           onChange={onTab}
           variant="rail"
+          showAdmin={canSeeAdmin}
         />
         <main className="flex min-w-0 flex-1 flex-col gap-4 pb-28 sm:pb-24 lg:pb-8">
           <header className="rounded-[22px] border border-white/10 bg-zinc-900/70 p-5 shadow-xl shadow-black/30 backdrop-blur-xl">
@@ -121,6 +127,7 @@ export function AICoachPage() {
         active="coach"
         onChange={onTab}
         variant="bar"
+        showAdmin={canSeeAdmin}
       />
     </div>
   )

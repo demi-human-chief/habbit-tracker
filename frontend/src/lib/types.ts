@@ -2,6 +2,8 @@ export type User = {
   id: string
   email: string
   display_name: string | null
+  is_admin: boolean
+  telegram_id: number | null
   created_at: string
 }
 

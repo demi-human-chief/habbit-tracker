@@ -15,6 +15,7 @@ from app.models.user import User
 from app.schemas.dashboard import ToggleTodayOut
 from app.schemas.habit import HabitCreate, HabitPublic, HabitUpdate
 from app.schemas.habit_log import HabitLogCreate, HabitLogPublic
+from app.services.analytics_service import track_event
 
 router = APIRouter(prefix="/habits", tags=["habits"])
 
@@ -70,6 +71,16 @@ def create_habit(
     db.add(h)
     db.commit()
     db.refresh(h)
+    try:
+        track_event(
+            db,
+            "habit_created",
+            user_id=user.id,
+            source="web",
+            meta={"habit_id": str(h.id), "habit_name": h.name},
+        )
+    except Exception:
+        pass
     return h
 
 
@@ -140,9 +151,29 @@ def toggle_habit_today(
         except IntegrityError:
             db.rollback()
             return ToggleTodayOut(habit_id=habit_id, completed_today=True)
+        try:
+            track_event(
+                db,
+                "habit_completed",
+                user_id=user.id,
+                source="web",
+                meta={"habit_id": str(habit_id)},
+            )
+        except Exception:
+            pass
         return ToggleTodayOut(habit_id=habit_id, completed_today=True)
     db.delete(log)
     db.commit()
+    try:
+        track_event(
+            db,
+            "habit_uncompleted",
+            user_id=user.id,
+            source="web",
+            meta={"habit_id": str(habit_id)},
+        )
+    except Exception:
+        pass
     return ToggleTodayOut(habit_id=habit_id, completed_today=False)
 
 

@@ -26,6 +26,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-habit}:${POSTGRES_PASSWORD:-habit}@db:5432/${POSTGRES_DB:-habit}
       JWT_SECRET: ${JWT_SECRET:-insecure_dev_only_set_JWT_SECRET_in_production_32char_min}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://127.0.0.1}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:1.5b}
     depends_on:
       db:
         condition: service_healthy
@@ -41,6 +43,31 @@ services:
     restart: unless-stopped
     expose:
       - "80"
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  bot:
+    build: ./backend
+    command: python -m app.bot.bot
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-habit}:${POSTGRES_PASSWORD:-habit}@db:5432/${POSTGRES_DB:-habit}
+      JWT_SECRET: ${JWT_SECRET:-insecure_dev_only_set_JWT_SECRET_in_production_32char_min}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://api:8000}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_REMINDER_HOUR: ${TELEGRAM_REMINDER_HOUR:-9}
+      TELEGRAM_REMINDER_MINUTE: ${TELEGRAM_REMINDER_MINUTE:-0}
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_started
+    restart: unless-stopped
 
   caddy:
     image: caddy:2.8-alpine
@@ -58,5 +85,6 @@ services:
 
 volumes:
   pgdata:
+  ollama_data:
   caddy_data:
   caddy_config:

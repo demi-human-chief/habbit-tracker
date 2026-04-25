@@ -11,4 +11,6 @@ class UserPublic(BaseModel):
     id: uuid.UUID
     email: EmailStr
     display_name: Optional[str] = None
+    is_admin: bool
+    telegram_id: Optional[int] = None
     created_at: datetime

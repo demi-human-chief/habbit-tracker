@@ -6,4 +6,4 @@ export type DashboardHabit = {
   completed: boolean
 }
 
-export type BottomTab = 'today' | 'stats' | 'coach' | 'profile'
+export type BottomTab = 'today' | 'stats' | 'coach' | 'profile' | 'admin'

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.db import get_db
-from app.routers import ai, auth, dashboard, habits
+from app.routers import admin_analytics, ai, auth, dashboard, habits, stats, telegram
 
 app = FastAPI(title="Habit Tracker API", version="0.1.0")
 
@@ -22,6 +22,9 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(habits.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(ai.router, prefix="/api/v1")
+app.include_router(stats.router, prefix="/api/v1")
+app.include_router(telegram.router, prefix="/api/v1")
+app.include_router(admin_analytics.router, prefix="/api/v1")
 
 
 @app.get("/health")
