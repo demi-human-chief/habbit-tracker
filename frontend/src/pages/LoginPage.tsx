@@ -28,7 +28,7 @@ export function LoginPage() {
       nav(to, { replace: true })
     } catch (e2) {
       if (e2 instanceof ApiError) setErr(e2.message)
-      else setErr('Не удалось войти')
+      else setErr('Could not sign in')
     } finally {
       setSubmitting(false)
     }
@@ -37,9 +37,9 @@ export function LoginPage() {
   return (
     <div className="af-auth">
       <div className="af-auth-box">
-        <h1 className="af-auth-title">Вход</h1>
+        <h1 className="af-auth-title">Sign in</h1>
         <p className="af-auth-sub">
-          Нет аккаунта? <Link to="/register">Регистрация</Link>
+          Don&apos;t have an account? <Link to="/register">Create one</Link>
         </p>
         <form
           onSubmit={onSubmit}
@@ -57,7 +57,7 @@ export function LoginPage() {
             />
           </label>
           <label className="af-label">
-            Пароль
+            Password
             <input
               className="af-input"
               type="password"
@@ -73,11 +73,11 @@ export function LoginPage() {
             className="af-cta af-cta--block"
             disabled={submitting}
           >
-            {submitting ? 'Вход…' : 'Продолжить'}
+            {submitting ? 'Signing in…' : 'Continue'}
           </button>
         </form>
         <p className="af-auth-back">
-          <Link to="/">← На главную</Link>
+          <Link to="/">← Back to home</Link>
         </p>
       </div>
     </div>

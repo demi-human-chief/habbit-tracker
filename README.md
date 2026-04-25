@@ -84,6 +84,7 @@ alembic upgrade head
 **Опционально дальше:** расширенные формы редактирования привычек, календарь отметок, реальный streak на бэкенде.
 
 **Дашборд (Today):** `GET /api/v1/dashboard/today` — привычки пользователя с `completed_today`, агрегаты `total_count`, `completed_count`, `completion_percent`, поля колец `ring_habits`, `ring_consistency`, `ring_focus`, `streak` (пока заглушка с бэка). `POST /api/v1/habits/{id}/toggle-today` — переключить отметку за сегодня (UTC-дата на сервере).
+Теперь `GET /api/v1/dashboard/today` также возвращает `weekly_activity` за 7 дней (включая дни с 0).
 
 **AI Coach (локальный):** `POST /api/v1/ai/coach` — backend собирает контекст привычек и логов за последние 14 дней, затем отправляет запрос в Ollama (`OLLAMA_BASE_URL`, `OLLAMA_MODEL`) и возвращает короткий персональный ответ.
 
@@ -107,6 +108,7 @@ alembic upgrade head
 
 - `GET /api/v1/habits/?include_archived=false` — список
 - `POST /api/v1/habits/` — создать (в теле `metadata` опционально)
+  - можно передавать `icon_shape` и `icon_color` для геометрического значка
 - `GET|PATCH|DELETE /api/v1/habits/{id}`
 - `GET /api/v1/habits/{id}/logs?from=…&to=…` — отметки по дням
 - `POST /api/v1/habits/{id}/logs` — тело: `logged_for_date`, при необходимости `note`, `metadata` (дубликат дня → 409)

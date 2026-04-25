@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...s,
           user: null,
           loading: false,
-          error: e instanceof Error ? e.message : 'Ошибка',
+          error: e instanceof Error ? e.message : 'Error',
         }))
       }
     }

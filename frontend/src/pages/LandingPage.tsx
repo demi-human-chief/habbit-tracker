@@ -92,41 +92,37 @@ export function LandingPage() {
             to="/login"
             className="af-link"
           >
-            Войти
+            Sign in
           </Link>
           <Link
             to="/register"
             className="af-cta-ghost"
           >
-            Создать аккаунт
+            Get started
           </Link>
         </nav>
       </header>
 
       <main className="af-hero">
         <div className="af-hero-copy">
-          <p className="af-kicker">Прогресс на виду</p>
-          <h1 className="af-title">
-            Кольца, которые
-            <br />
-            хочется закрывать
-          </h1>
+          <p className="af-kicker">Habit Tracker</p>
+          <h1 className="af-title">Build better habits with AI</h1>
           <p className="af-lead">
-            Трекер привычек с ясной картиной дня: отмечайте важное, смотрите
-            динамику, не перегружайте голову.
+            Track your daily routines, stay consistent, and get personalized coaching
+            based on your progress.
           </p>
           <div className="af-hero-cta">
             <Link
               to="/register"
               className="af-cta"
             >
-              Начать
+              Get started
             </Link>
             <Link
-              to="/app"
+              to="/login"
               className="af-cta-ghost"
             >
-              Уже с аккаунтом
+              Sign in
             </Link>
           </div>
         </div>
@@ -134,18 +130,32 @@ export function LandingPage() {
           <div className="af-blob" />
           <div className="af-card">
             <RingSet />
-            <p className="af-card-caption">Серия, цели и детали в одной зоне</p>
+            <p className="af-card-caption">Your daily progress, clear and focused.</p>
           </div>
         </div>
       </main>
 
       <section className="af-band">
         <div className="af-band-inner">
-          <h2>Спокойный фокус</h2>
-          <p>
-            Светлый, воздушный и тёмные режимы — как в тренерских приложениях: без
-            шума, без лишних экранов.
-          </p>
+          <h2>Everything you need to stay consistent</h2>
+          <div className="af-feature-grid">
+            <article className="af-feature-card">
+              <h3>Daily habit tracking</h3>
+              <p>Plan your routines and check them off every day.</p>
+            </article>
+            <article className="af-feature-card">
+              <h3>Progress analytics</h3>
+              <p>See streaks, completion trends, and weekly activity.</p>
+            </article>
+            <article className="af-feature-card">
+              <h3>AI coaching</h3>
+              <p>Get practical advice based on your habit history.</p>
+            </article>
+            <article className="af-feature-card">
+              <h3>Telegram reminders</h3>
+              <p>Stay on track with reminders and quick updates in chat.</p>
+            </article>
+          </div>
         </div>
       </section>
     </div>

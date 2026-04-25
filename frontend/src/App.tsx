@@ -8,6 +8,7 @@ import { AppPage } from './pages/AppPage'
 import { AICoachPage } from './pages/AICoachPage'
 import { StatsPage } from './pages/StatsPage'
 import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage'
+import { ProfilePage } from './pages/ProfilePage'
 
 export default function App() {
   return (
@@ -55,6 +56,14 @@ export default function App() {
             element={(
               <RequireAuth>
                 <AdminAnalyticsPage />
+              </RequireAuth>
+            )}
+          />
+          <Route
+            path="/app/profile"
+            element={(
+              <RequireAuth>
+                <ProfilePage />
               </RequireAuth>
             )}
           />

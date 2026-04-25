@@ -29,6 +29,8 @@ class Habit(Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     color: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     icon: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    icon_shape: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    icon_color: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     # колонка в БД `metadata` — имя атрибута другое (metadata зарезервировано в Declarative)

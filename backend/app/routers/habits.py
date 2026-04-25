@@ -64,6 +64,8 @@ def create_habit(
         description=body.description,
         color=body.color,
         icon=body.icon,
+        icon_shape=body.icon_shape,
+        icon_color=body.icon_color,
         is_archived=body.is_archived,
         sort_order=body.sort_order,
         meta=body.metadata,
@@ -105,6 +107,8 @@ def update_habit(
     for key, value in data.items():
         if key == "metadata":
             h.meta = value
+        elif key == "title":
+            continue
         else:
             setattr(h, key, value)
     db.commit()

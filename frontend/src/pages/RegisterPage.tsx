@@ -33,7 +33,7 @@ export function RegisterPage() {
       nav(to, { replace: true })
     } catch (e2) {
       if (e2 instanceof ApiError) setErr(e2.message)
-      else setErr('Не удалось зарегистрироваться')
+      else setErr('Could not create account')
     } finally {
       setSubmitting(false)
     }
@@ -42,22 +42,22 @@ export function RegisterPage() {
   return (
     <div className="af-auth">
       <div className="af-auth-box">
-        <h1 className="af-auth-title">Регистрация</h1>
+        <h1 className="af-auth-title">Create account</h1>
         <p className="af-auth-sub">
-          Уже есть аккаунт? <Link to="/login">Войти</Link>
+          Already have an account? <Link to="/login">Sign in</Link>
         </p>
         <form
           onSubmit={onSubmit}
           className="af-form"
         >
           <label className="af-label">
-            Как вас называть
+            Display name
             <input
               className="af-input"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               autoComplete="name"
-              placeholder="по желанию"
+              placeholder="optional"
             />
           </label>
           <label className="af-label">
@@ -72,7 +72,7 @@ export function RegisterPage() {
             />
           </label>
           <label className="af-label">
-            Пароль (от 8 символов)
+            Password (min 8 chars)
             <input
               className="af-input"
               type="password"
@@ -89,11 +89,11 @@ export function RegisterPage() {
             className="af-cta af-cta--block"
             disabled={submitting}
           >
-            {submitting ? 'Создаём…' : 'Создать аккаунт'}
+            {submitting ? 'Creating…' : 'Create account'}
           </button>
         </form>
         <p className="af-auth-back">
-          <Link to="/">← На главную</Link>
+          <Link to="/">← Back to home</Link>
         </p>
       </div>
     </div>

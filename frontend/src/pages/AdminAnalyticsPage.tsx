@@ -104,6 +104,7 @@ export function AdminAnalyticsPage() {
     if (tab === 'today') navigate('/app')
     else if (tab === 'stats') navigate('/app/stats')
     else if (tab === 'coach') navigate('/app/ai')
+    else if (tab === 'profile') navigate('/app/profile')
     else if (tab === 'admin') navigate('/app/admin/analytics')
     else navigate('/app')
   }

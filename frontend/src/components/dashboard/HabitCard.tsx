@@ -1,4 +1,5 @@
 import type { DashboardHabit } from './types'
+import { ShapeIcon } from './HabitVisual'
 
 type Props = {
   habit: DashboardHabit
@@ -14,7 +15,14 @@ export function HabitCard({ habit, onToggle, disabled }: Props) {
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/[0.06] text-xl"
           aria-hidden
         >
-          {habit.icon}
+          {habit.iconShape ? (
+            <ShapeIcon
+              shape={habit.iconShape}
+              color={habit.iconColor}
+            />
+          ) : (
+            habit.icon
+          )}
         </span>
         <div className="min-w-0">
           <h2 className="m-0 text-[1.02rem] font-semibold tracking-tight text-zinc-100">

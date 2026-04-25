@@ -1,8 +1,8 @@
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -10,7 +10,7 @@ from app.deps import get_current_user
 from app.models.habit import Habit
 from app.models.habit_log import HabitLog
 from app.models.user import User
-from app.schemas.dashboard import DashboardTodayOut, HabitTodayItem
+from app.schemas.dashboard import DashboardTodayOut, HabitTodayItem, WeeklyActivityItem
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -27,12 +27,38 @@ def _ring_derivatives(habits_ring: float) -> tuple[float, float]:
     return consistency, focus
 
 
+def _weekly_activity(db: Session, user: User, today: date) -> list[WeeklyActivityItem]:
+    start = today - timedelta(days=6)
+    rows = db.execute(
+        select(HabitLog.logged_for_date, func.count(HabitLog.id))
+        .where(
+            HabitLog.user_id == user.id,
+            HabitLog.logged_for_date >= start,
+            HabitLog.logged_for_date <= today,
+        )
+        .group_by(HabitLog.logged_for_date)
+    ).all()
+    by_day = {d: int(c) for d, c in rows}
+    out: list[WeeklyActivityItem] = []
+    for i in range(7):
+        d = start + timedelta(days=i)
+        out.append(
+            WeeklyActivityItem(
+                date=d,
+                day=d.strftime("%a"),
+                completed_count=by_day.get(d, 0),
+            )
+        )
+    return out
+
+
 @router.get("/today", response_model=DashboardTodayOut)
 def get_today_dashboard(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> DashboardTodayOut:
     today = _today_utc()
+    weekly_activity = _weekly_activity(db, user, today)
     habits = list(
         db.scalars(
             select(Habit)
@@ -52,6 +78,7 @@ def get_today_dashboard(
             ring_habits=0.0,
             ring_consistency=0.0,
             ring_focus=0.0,
+            weekly_activity=weekly_activity,
         )
 
     habit_ids = [h.id for h in habits]
@@ -74,6 +101,8 @@ def get_today_dashboard(
                 description=h.description,
                 color=h.color,
                 icon=h.icon,
+                icon_shape=h.icon_shape,
+                icon_color=h.icon_color,
                 sort_order=h.sort_order,
                 metadata=h.meta,
                 completed_today=done_today,
@@ -95,4 +124,5 @@ def get_today_dashboard(
         ring_habits=habits_ring,
         ring_consistency=cons,
         ring_focus=foc,
+        weekly_activity=weekly_activity,
     )

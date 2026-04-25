@@ -9,7 +9,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <div className="app-shell app-shell--center">
-        <p className="af-muted">Загрузка…</p>
+        <p className="af-muted">Loading…</p>
       </div>
     )
   }

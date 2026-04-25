@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../../lib/api'
 import { useAuth } from '../../lib/auth-context'
-import { generateTelegramLinkCode, type TelegramLinkCodeResponse } from '../../lib/telegram-api'
 import {
   createHabit,
   getTodayDashboard,
@@ -38,38 +37,21 @@ function mapDashboardToHabits(d: DashboardTodayResponse): DashboardHabit[] {
     title: h.name,
     description: h.description?.trim() ? h.description : '',
     icon: (h.icon && h.icon.trim()) || pickIcon(h.name),
+    iconShape: h.icon_shape,
+    iconColor: h.icon_color,
     completed: h.completed_today,
   }))
 }
 
-function TabPlaceholder({
-  title,
-  body,
-}: {
-  title: string
-  body: string
-}) {
-  return (
-    <div className="flex min-h-[50svh] flex-col items-center justify-center gap-2 px-4 pb-28 pt-4 text-center sm:pb-24 lg:min-h-[40svh] lg:pb-8">
-      <h1 className="m-0 text-xl font-semibold tracking-tight text-zinc-100">{title}</h1>
-      <p className="m-0 max-w-[28ch] text-sm leading-relaxed text-zinc-500">{body}</p>
-    </div>
-  )
-}
-
 export function DashboardApp() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
-  const [tab, setTab] = useState<BottomTab>('today')
+  const { user } = useAuth()
   const [dash, setDash] = useState<DashboardTodayResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [adding, setAdding] = useState(false)
   const [togglingId, setTogglingId] = useState<string | null>(null)
-  const [tgLink, setTgLink] = useState<TelegramLinkCodeResponse | null>(null)
-  const [tgBusy, setTgBusy] = useState(false)
-  const [tgError, setTgError] = useState<string | null>(null)
 
   const loadDashboard = useCallback(async (opts?: { silent?: boolean }) => {
     const silent = opts?.silent === true
@@ -145,12 +127,22 @@ export function DashboardApp() {
     }
   }
 
-  const addHabit = async (title: string) => {
-    const t = title.trim()
+  const addHabit = async (payload: {
+    title: string
+    iconShape?: string | null
+    iconColor?: string | null
+    icon?: string | null
+  }) => {
+    const t = payload.title.trim()
     if (!t) return
     setAdding(true)
     try {
-      await createHabit({ name: t })
+      await createHabit({
+        name: t,
+        icon: payload.icon ?? null,
+        icon_shape: payload.iconShape ?? null,
+        icon_color: payload.iconColor ?? null,
+      })
       await loadDashboard({ silent: true })
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : 'Could not create habit'
@@ -164,22 +156,6 @@ export function DashboardApp() {
   const showTodayError = Boolean(error) && !dash && !loading
   const emptyHabits = dash && dash.total_count === 0
   const canSeeAdmin = Boolean(user?.is_admin)
-  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined
-  const botUrl = botUsername?.trim() ? `https://t.me/${botUsername.trim()}` : null
-
-  const onGenerateTelegramCode = async () => {
-    setTgBusy(true)
-    setTgError(null)
-    try {
-      const data = await generateTelegramLinkCode()
-      setTgLink(data)
-    } catch (e) {
-      const msg = e instanceof ApiError ? e.message : 'Failed to generate Telegram code'
-      setTgError(msg)
-    } finally {
-      setTgBusy(false)
-    }
-  }
   const onTabChange = (nextTab: BottomTab) => {
     if (nextTab === 'coach') {
       navigate('/app/ai')
@@ -193,7 +169,11 @@ export function DashboardApp() {
       navigate('/app/admin/analytics')
       return
     }
-    setTab(nextTab)
+    if (nextTab === 'profile') {
+      navigate('/app/profile')
+      return
+    }
+    navigate('/app')
   }
 
   return (
@@ -202,7 +182,7 @@ export function DashboardApp() {
     >
       <div className="mx-auto flex w-full max-w-[430px] flex-col px-3 pt-2 sm:px-4 md:max-w-3xl md:px-6 lg:max-w-7xl lg:flex-row lg:items-start lg:gap-6 lg:px-8 lg:pt-6 xl:max-w-[1200px] xl:gap-8">
         <BottomNav
-          active={tab}
+          active="today"
           onChange={onTabChange}
           variant="rail"
           showAdmin={canSeeAdmin}
@@ -224,7 +204,7 @@ export function DashboardApp() {
               </p>
               <button
                 type="button"
-                onClick={() => setTab('profile')}
+                onClick={() => navigate('/app/profile')}
                 title="Open profile"
                 aria-label="Open profile"
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.03] text-sm font-semibold text-zinc-100 transition hover:scale-105 hover:shadow-lg motion-reduce:transition-none"
@@ -234,7 +214,6 @@ export function DashboardApp() {
             </div>
           </header>
 
-          {tab === 'today' && (
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8 xl:gap-10">
               <div className="min-w-0 flex-1 space-y-5 lg:space-y-6">
                 {error && dash ? (
@@ -323,7 +302,7 @@ export function DashboardApp() {
 
                     <div className="space-y-4 lg:hidden">
                       <AIInsight />
-                      <WeeklyActivity />
+                      <WeeklyActivity values={dash.weekly_activity} />
                     </div>
                   </>
                 ) : null}
@@ -332,89 +311,15 @@ export function DashboardApp() {
               {!showTodaySkeleton && !showTodayError && dash ? (
                 <aside className="hidden w-full max-w-sm shrink-0 flex-col gap-4 lg:flex xl:max-w-[22rem]">
                   <AIInsight />
-                  <WeeklyActivity />
+                  <WeeklyActivity values={dash.weekly_activity} />
                 </aside>
               ) : null}
             </div>
-          )}
-
-          {tab === 'stats' && (
-            <TabPlaceholder
-              title="Stats"
-              body="Detailed analytics and history will live here. Coming soon."
-            />
-          )}
-
-          {tab === 'profile' && (
-            <div className="flex min-h-[45svh] flex-col items-center px-2 pb-28 pt-2 text-center sm:pb-24 lg:pb-8">
-              <h1 className="m-0 text-xl font-semibold text-zinc-100">Profile</h1>
-              <p className="mt-2 text-sm text-zinc-500">{user?.email}</p>
-              <div className="mt-6 flex w-full max-w-[420px] flex-col gap-3">
-                <section className="rounded-[22px] border border-white/10 bg-zinc-900/70 p-4 text-left shadow-lg shadow-black/30 backdrop-blur-xl">
-                  <p className="m-0 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-zinc-500">
-                    Telegram Integration
-                  </p>
-                  <p className="mt-2 text-sm text-zinc-300">
-                    {user?.telegram_id ? 'Connected ✅' : 'Not connected'}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => void onGenerateTelegramCode()}
-                    disabled={tgBusy}
-                    className="mt-3 w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm font-semibold text-zinc-100 transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-45"
-                  >
-                    Generate Telegram link code
-                  </button>
-                  {tgError ? (
-                    <p className="mt-2 text-xs text-rose-300">{tgError}</p>
-                  ) : null}
-                  {tgLink ? (
-                    <div className="mt-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-3">
-                      <p className="m-0 text-xs uppercase tracking-[0.12em] text-emerald-300">
-                        Send this code to the bot
-                      </p>
-                      <p className="m-0 mt-1 text-xl font-bold tracking-[0.2em] text-emerald-200">
-                        {tgLink.code}
-                      </p>
-                    </div>
-                  ) : null}
-                  <ol className="mb-0 mt-3 list-decimal space-y-1 pl-5 text-xs text-zinc-400">
-                    <li>Open Telegram bot</li>
-                    <li>Press /start</li>
-                    <li>Send the code</li>
-                  </ol>
-                  {botUrl ? (
-                    <a
-                      href={botUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-white/10 bg-white/[0.08] px-3 py-2 text-sm font-semibold text-zinc-100 no-underline transition hover:bg-white/[0.12]"
-                    >
-                      Open bot
-                    </a>
-                  ) : null}
-                </section>
-                <Link
-                  to="/"
-                  className="block rounded-2xl border border-white/10 bg-zinc-900/70 px-4 py-3 text-center text-sm font-medium text-zinc-100 no-underline transition hover:-translate-y-0.5 hover:bg-white/10"
-                >
-                  About / Home
-                </Link>
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="rounded-2xl border border-rose-400/35 bg-zinc-900/70 px-4 py-3 text-sm font-medium text-rose-300 transition hover:-translate-y-0.5 hover:bg-rose-500/10"
-                >
-                  Log out
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
       <BottomNav
-        active={tab}
+        active="today"
         onChange={onTabChange}
         variant="bar"
         showAdmin={canSeeAdmin}

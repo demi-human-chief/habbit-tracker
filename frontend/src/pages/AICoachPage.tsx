@@ -21,8 +21,7 @@ export function AICoachPage() {
   const [messages, setMessages] = useState<ChatMsg[]>([
     {
       role: 'assistant',
-      text:
-        'Привет! Я локальный AI Coach. Расскажи, с какой привычкой сложнее всего, и я предложу план на сегодня.',
+      text: 'Tell your coach what you are struggling with.',
     },
   ])
 
@@ -30,6 +29,7 @@ export function AICoachPage() {
     if (tab === 'today') navigate('/app')
     else if (tab === 'coach') navigate('/app/ai')
     else if (tab === 'stats') navigate('/app/stats')
+    else if (tab === 'profile') navigate('/app/profile')
     else if (tab === 'admin' && canSeeAdmin) navigate('/app/admin/analytics')
     else navigate('/app')
   }
@@ -46,7 +46,7 @@ export function AICoachPage() {
       const answer = await sendCoachMessage(message)
       setMessages((prev) => [...prev, { role: 'assistant', text: answer }])
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Не удалось получить ответ коуча')
+      setError(err instanceof ApiError ? err.message : 'Failed to get coach response')
     } finally {
       setLoading(false)
     }
@@ -54,7 +54,7 @@ export function AICoachPage() {
 
   return (
     <div className="min-h-svh overflow-x-hidden bg-[#050506] font-sans text-zinc-100 antialiased selection:bg-emerald-500/30 [background-image:radial-gradient(120%_80%_at_10%_0%,rgba(255,60,100,0.12)_0%,transparent_50%),radial-gradient(100%_60%_at_100%_20%,rgba(30,160,255,0.1)_0%,transparent_45%),radial-gradient(90%_50%_at_50%_100%,rgba(50,210,120,0.08)_0%,transparent_50%)]">
-      <div className="mx-auto flex w-full max-w-[430px] flex-col px-3 pt-2 sm:px-4 md:max-w-3xl md:px-6 lg:max-w-5xl lg:flex-row lg:items-start lg:gap-6 lg:px-8 lg:pt-6">
+      <div className="mx-auto flex w-full max-w-[430px] flex-col px-3 pt-2 sm:px-4 md:max-w-3xl md:px-6 lg:max-w-7xl lg:flex-row lg:items-start lg:gap-6 lg:px-8 lg:pt-6 xl:max-w-[1200px] xl:gap-8">
         <BottomNav
           active="coach"
           onChange={onTab}
@@ -65,8 +65,7 @@ export function AICoachPage() {
           <header className="rounded-[22px] border border-white/10 bg-zinc-900/70 p-5 shadow-xl shadow-black/30 backdrop-blur-xl">
             <h1 className="m-0 text-xl font-semibold tracking-tight text-zinc-100">AI Coach</h1>
             <p className="mb-0 mt-2 text-sm leading-relaxed text-zinc-400">
-              Локальный Qwen через Ollama. Советы основаны на ваших привычках и выполнениях за
-              последние 14 дней.
+              Ask for guidance, motivation, or a practical plan based on your habit history.
             </p>
           </header>
 
@@ -89,7 +88,7 @@ export function AICoachPage() {
                 </div>
               ))}
               {loading ? (
-                <div className="text-xs uppercase tracking-widest text-zinc-500">AI Coach думает…</div>
+                <div className="text-xs uppercase tracking-widest text-zinc-500">AI Coach is thinking…</div>
               ) : null}
             </div>
 
@@ -105,7 +104,7 @@ export function AICoachPage() {
             >
               <input
                 className="min-w-0 flex-1 border-0 bg-transparent px-2 py-2 text-sm text-zinc-100 outline-none placeholder:text-zinc-500 disabled:opacity-50"
-                placeholder="Например: я постоянно пропускаю медитацию"
+                placeholder="Ask your coach anything..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 maxLength={500}

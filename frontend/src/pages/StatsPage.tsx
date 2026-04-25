@@ -57,6 +57,7 @@ export function StatsPage() {
     if (tab === 'today') navigate('/app')
     else if (tab === 'coach') navigate('/app/ai')
     else if (tab === 'stats') navigate('/app/stats')
+    else if (tab === 'profile') navigate('/app/profile')
     else if (tab === 'admin' && canSeeAdmin) navigate('/app/admin/analytics')
     else navigate('/app')
   }

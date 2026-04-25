@@ -6,6 +6,8 @@ export type HabitTodayItem = {
   description: string | null
   color: string | null
   icon: string | null
+  icon_shape: string | null
+  icon_color: string | null
   sort_order: number
   metadata: Record<string, unknown> | null
   completed_today: boolean
@@ -21,6 +23,7 @@ export type DashboardTodayResponse = {
   ring_habits: number
   ring_consistency: number
   ring_focus: number
+  weekly_activity: { date: string; day: string; completed_count: number }[]
 }
 
 export type HabitPublic = {
@@ -30,6 +33,8 @@ export type HabitPublic = {
   description: string | null
   color: string | null
   icon: string | null
+  icon_shape: string | null
+  icon_color: string | null
   is_archived: boolean
   sort_order: number
   metadata: Record<string, unknown> | null
@@ -45,6 +50,8 @@ export async function createHabit(payload: {
   name: string
   description?: string | null
   icon?: string | null
+  icon_shape?: string | null
+  icon_color?: string | null
 }): Promise<HabitPublic> {
   return apiJson<HabitPublic>('/api/v1/habits/', {
     method: 'POST',
@@ -52,6 +59,8 @@ export async function createHabit(payload: {
       name: payload.name,
       description: payload.description ?? null,
       icon: payload.icon ?? null,
+      icon_shape: payload.icon_shape ?? null,
+      icon_color: payload.icon_color ?? null,
     }),
   })
 }

@@ -3,6 +3,8 @@ export type DashboardHabit = {
   title: string
   description: string
   icon: string
+  iconShape?: string | null
+  iconColor?: string | null
   completed: boolean
 }
 
